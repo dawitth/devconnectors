@@ -33,7 +33,7 @@ router.get('/', passport.authenticate('jwt',{session:false}), (req,res) =>{
  	Profile.findOne({ 
  		user: req.user.id
  	})
- 	.populate('user',['name'])
+ 	.populate('user',['name','avatar'])
  	.then(profile=>{
  		if(!profile){
  			errors.noprofile = 'There is no profile for this user'
@@ -48,7 +48,71 @@ router.get('/', passport.authenticate('jwt',{session:false}), (req,res) =>{
 
 
 
-// @routes GET api/profile/
+// @routes GET api/profile/all/
+// @description Get all profiles
+// @access Public
+
+router.get('/all', (req,res) => {
+	const errors= {}
+	Profile.find()
+			.populate('user',['name','avatar'])
+			.then(profile => {
+				if(!profile){
+					errors.noprofile = "There are no profiles"
+					return res.status(400).json()
+				}
+				res.json(profile)
+			})
+			.catch(err => res.status(404).json({profile: "There are no profiles"}))
+})
+
+
+// @routes GET api/profile/handle/:handle
+// @description Get profile by handle 
+// @access Public
+
+router.get('/handle/:handle', (req,res) => {
+	const errors = {}
+
+	Profile.findOne({handle: req.params.handle})
+			.populate('user',['name','avatar'])
+			.then(profile => {
+				if(!profile){
+					errors.noprofile = 'There is no profile for this user'
+					res.status(404).json(errors)
+				}
+				res.json(profile)
+			})
+			.catch(err => res.status(404).json(err));
+
+} )
+
+
+// @routes GET api/profile/handle/:user_id
+// @description Get profile by handle 
+// @access Public
+
+router.get('/user/:user_id', (req,res) => {
+	const errors = {}
+
+	Profile.findOne({user: req.params.user_id})
+			.populate('user',['name','avatar'])
+			.then(profile => {
+				if(!profile){
+					errors.noprofile = 'There is no profile for this user'
+					res.status(404).json(errors)
+				}
+				res.json(profile)
+			})
+			.catch(err => res.status(404).json({profile: 'There is no profile for this user'}));
+			
+} )
+
+
+
+
+
+// @routes Post api/profile/
 // @description create or edit user profile
 // @access Private
 
@@ -100,7 +164,7 @@ router.post('/',
  				} else {
  					//Crete
 
- 					// Check if handel exists
+ 					// Check if handle exists
 
  					Profile.findOne({handle: profileFields.handle})
  							.then(profile => {
